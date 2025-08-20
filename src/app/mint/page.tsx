@@ -37,7 +37,7 @@ export default function Home() {
 		<main className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50/30">
 			<div className="container mx-auto px-4 py-8">
 				{/* Header */}
-				<div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
+				<div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4 mt-3">
 					<div className="flex items-center gap-3">
 						<div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
 							<GalleryHorizontal className="h-8 w-8 text-white" />
