@@ -2,8 +2,8 @@ import { ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { CollectiblesABI } from "@/lib/abi";
 
-export const COLLECTIBLES_ADDRESS =
-	"0xeD206F25fB9C73cbB61A15916E02F772B8404C14";
+export const COLLECTIBLES_ADDRESS = "0xeD206F25fB9C73cbB61A15916E02F772B8404C14";
+
 export interface NFTAttribute {
 	trait_type: string;
 	value: string | number;
