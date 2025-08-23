@@ -8,16 +8,16 @@ import {
 	WalletIcon,
 } from "lucide-react";
 import { useEffect } from "react";
+import { useAccount, useConnect } from "wagmi";
 import { MintNFTForm } from "@/components/mint-nft-form";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserNFTs } from "@/components/user-nfts";
 import { useCollectibles } from "@/hooks/use-collectibles";
-import { useMetaMask } from "@/hooks/use-metamask";
 
 export default function Home() {
-	const { isConnected, account, connect, disconnect } = useMetaMask();
+	const { isConnected, address } = useAccount();
+	const { connect } = useConnect();
 	const {
 		isMintEnabled,
 		userNFTs,
@@ -25,7 +25,7 @@ export default function Home() {
 		error,
 		checkMintStatus,
 		mintWithRoyalty,
-	} = useCollectibles(account);
+	} = useCollectibles(address as string);
 
 	useEffect(() => {
 		if (isConnected) {
@@ -36,46 +36,6 @@ export default function Home() {
 	return (
 		<main className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50/30">
 			<div className="container mx-auto px-4 py-8">
-				{/* Header */}
-				<div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4 mt-3">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-							<GalleryHorizontal className="h-8 w-8 text-white" />
-						</div>
-						<h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-							NFT Marketplace
-						</h1>
-					</div>
-
-					{isConnected ? (
-						<div className="flex flex-col sm:flex-row items-center gap-3">
-							<Badge
-								variant="secondary"
-								className="px-3 py-1 text-sm font-medium"
-							>
-								<div className="flex items-center gap-2">
-									<div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-									<span>
-										{account?.slice(0, 6)}...{account?.slice(-4)}
-									</span>
-								</div>
-							</Badge>
-							<Button variant="outline" onClick={disconnect} className="gap-2">
-								<ArrowLeftRightIcon className="h-4 w-4" />
-								Disconnect
-							</Button>
-						</div>
-					) : (
-						<Button
-							onClick={connect}
-							className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-						>
-							<WalletIcon className="h-4 w-4" />
-							Connect MetaMask
-						</Button>
-					)}
-				</div>
-
 				{isConnected ? (
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 						{/* Mint Card */}
@@ -124,7 +84,7 @@ export default function Home() {
 							</CardHeader>
 							<CardContent className="p-6">
 								<UserNFTs
-									account={account}
+									account={address as string}
 									nfts={userNFTs}
 									loading={loading}
 									error={error}
@@ -146,7 +106,7 @@ export default function Home() {
 							NFT collection
 						</p>
 						<Button
-							onClick={connect}
+							onClick={() => connect}
 							size="lg"
 							className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-8 py-3 h-auto text-lg"
 						>

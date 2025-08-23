@@ -169,7 +169,7 @@ export function UserNFTs({
 							</div>
 
 							{/* Action Buttons */}
-							<div className="flex gap-1">
+							<div className="flex flex-col gap-1">
 								<Button
 									variant="outline"
 									size="sm"

@@ -1,194 +1,124 @@
-// app/page.tsx
 "use client";
-
-import {
-	ArrowLeftRightIcon,
-	GalleryHorizontal,
-	SparklesIcon,
-	WalletIcon,
-} from "lucide-react";
-import { useEffect } from "react";
-import { MintNFTForm } from "@/components/mint-nft-form";
-import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Gem, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserNFTs } from "@/components/user-nfts";
 import { useCollectibles } from "@/hooks/use-collectibles";
-import { useMetaMask } from "@/hooks/use-metamask";
+import type { listingMetadatainterface } from "./listings/page";
 
 export default function Home() {
-	const { isConnected, account, connect, disconnect } = useMetaMask();
-	const {
-		isMintEnabled,
-		userNFTs,
-		loading,
-		error,
-		checkMintStatus,
-		mintWithRoyalty,
-	} = useCollectibles(account);
+	const [listings, setListings] = useState<listingMetadatainterface[]>([]);
+	const { address } = useAccount();
+	const { getAllListings, getNFTMetadata } = useCollectibles(address as string);
+	const router = useRouter();
+
+	const loadAllListings = useCallback(async () => {
+		if (!getAllListings || !getNFTMetadata) return;
+
+		try {
+			const allListings = await getAllListings();
+
+			// Fetch NFT metadata for each listing
+			const listingsWithMetadata = await Promise.all(
+				allListings.map(async (listing) => {
+					const nftData = await getNFTMetadata(listing.tokenId);
+					return {
+						...listing,
+						nftData,
+					};
+				}),
+			);
+
+			setListings(listingsWithMetadata);
+		} catch (error) {
+			console.error("Failed to load listings:", error);
+		}
+	}, [getAllListings, getNFTMetadata]);
 
 	useEffect(() => {
-		if (isConnected) {
-			checkMintStatus();
-		}
-	}, [isConnected, checkMintStatus]);
+		loadAllListings();
+	}, [loadAllListings]);
 
+	const activeListings = listings.filter((listing) => listing.isActive);
+	const endedListings = listings.filter((listing) => !listing.isActive);
 	return (
-		<main className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50/30">
-			<div className="container mx-auto px-4 py-8">
-				{/* Header */}
-				<div className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
-					<div className="flex items-center gap-3">
-						<div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-							<GalleryHorizontal className="h-8 w-8 text-white" />
-						</div>
-						<h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-							NFT Marketplace
-						</h1>
+		<div className="relative h-full overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 text-white">
+			<div className="absolute inset-0 bg-black/20" />
+			<div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1643330683233-ff2ac89b002c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2832&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+
+			<div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-28">
+				<div className="text-center">
+					<div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+						<Gem className="w-5 h-5 mr-2 text-yellow-300" />
+						<span className="text-sm font-medium">Discover Digital Art</span>
 					</div>
 
-					{isConnected ? (
-						<div className="flex flex-col sm:flex-row items-center gap-3">
-							<Badge
-								variant="secondary"
-								className="px-3 py-1 text-sm font-medium"
-							>
-								<div className="flex items-center gap-2">
-									<div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-									<span>
-										{account?.slice(0, 6)}...{account?.slice(-4)}
-									</span>
-								</div>
-							</Badge>
-							<Button variant="outline" onClick={disconnect} className="gap-2">
-								<ArrowLeftRightIcon className="h-4 w-4" />
-								Disconnect
-							</Button>
+					<h1 className="text-5xl sm:text-7xl font-bold mb-6 leading-tight">
+						Explore{" "}
+						<span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+							Digital
+						</span>{" "}
+						Collectibles
+					</h1>
+
+					<p className="text-xl sm:text-2xl text-purple-100 mb-10 max-w-3xl mx-auto leading-relaxed">
+						Discover, collect, and trade extraordinary NFTs in the most vibrant
+						digital marketplace on the blockchain
+					</p>
+
+					<div className="flex flex-wrap justify-center gap-4 text-sm mb-12">
+						<div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-5 py-3">
+							<TrendingUp className="w-5 h-5 mr-2 text-green-300" />
+							<span className="font-medium">
+								{activeListings.length} Active Listings
+							</span>
 						</div>
-					) : (
-						<Button
-							onClick={connect}
-							className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-						>
-							<WalletIcon className="h-4 w-4" />
-							Connect MetaMask
-						</Button>
-					)}
+						<div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-5 py-3">
+							<CheckCircle2 className="w-5 h-5 mr-2 text-blue-300" />
+							<span className="font-medium">{endedListings.length} Sold</span>
+						</div>
+						<div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-5 py-3">
+							<Zap className="w-5 h-5 mr-2 text-yellow-300" />
+							<span className="font-medium">New drops daily</span>
+						</div>
+					</div>
+
+					<Button
+						size="lg"
+						onClick={() => router.push("/listings")}
+						className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-6 text-lg rounded-xl shadow-lg"
+					>
+						<Sparkles className="w-4 h-4 mr-1" />
+						Start Exploring
+					</Button>
 				</div>
-
-				{isConnected ? (
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-						{/* Mint Card */}
-						<Card className="shadow-lg border-0 overflow-hidden bg-gradient-to-r from-purple-500/20 to-pink-500/10">
-							<CardHeader className="border-b">
-								<div className="flex items-center gap-2">
-									<SparklesIcon className="h-5 w-5 text-purple-600" />
-									<CardTitle className="text-2xl">Create New NFT</CardTitle>
-								</div>
-							</CardHeader>
-							<CardContent className="p-6">
-								{isMintEnabled ? (
-									<MintNFTForm
-										onMint={async (tokenUrl, royalty) => {
-											const success = await mintWithRoyalty(tokenUrl, royalty);
-											if (success) {
-												// Handle success
-											}
-											return success;
-										}}
-										loading={loading}
-									/>
-								) : (
-									<div className="text-center py-8">
-										<div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-											<SparklesIcon className="h-8 w-8 text-muted-foreground" />
-										</div>
-										<p className="text-muted-foreground font-medium">
-											Minting is currently disabled
-										</p>
-										<p className="text-sm text-muted-foreground mt-1">
-											Check back later to create new NFTs
-										</p>
-									</div>
-								)}
-							</CardContent>
-						</Card>
-
-						{/* Your NFTs Card */}
-						<Card className="shadow-lg border-0 overflow-hidden bg-gradient-to-r from-blue-600/20 to-blue-400/10">
-							<CardHeader className=" border-b">
-								<div className="flex items-center gap-2">
-									<GalleryHorizontal className="h-5 w-5 text-blue-600" />
-									<CardTitle className="text-2xl">Your Collection</CardTitle>
-								</div>
-							</CardHeader>
-							<CardContent className="p-6">
-								<UserNFTs
-									account={account}
-									nfts={userNFTs}
-									loading={loading}
-									error={error}
-								/>
-							</CardContent>
-						</Card>
-					</div>
-				) : (
-					// Disconnected State
-					<div className="max-w-2xl mx-auto text-center py-16">
-						<div className="mx-auto w-24 h-24 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center mb-6">
-							<WalletIcon className="h-12 w-12 text-purple-600" />
-						</div>
-						<h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-							Connect Your Wallet
-						</h2>
-						<p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-							Connect your MetaMask wallet to start minting and managing your
-							NFT collection
-						</p>
-						<Button
-							onClick={connect}
-							size="lg"
-							className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-8 py-3 h-auto text-lg"
-						>
-							<WalletIcon className="h-5 w-5" />
-							Connect MetaMask
-						</Button>
-
-						{/* Features Grid */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-							<div className="bg-white p-6 rounded-lg shadow-sm border">
-								<div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-									<SparklesIcon className="h-6 w-6 text-purple-600" />
-								</div>
-								<h3 className="font-semibold mb-2">Create NFTs</h3>
-								<p className="text-sm text-muted-foreground">
-									Mint unique digital assets with custom metadata and royalties
-								</p>
-							</div>
-
-							<div className="bg-white p-6 rounded-lg shadow-sm border">
-								<div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-									<GalleryHorizontal className="h-6 w-6 text-blue-600" />
-								</div>
-								<h3 className="font-semibold mb-2">Manage Collection</h3>
-								<p className="text-sm text-muted-foreground">
-									View and manage all your NFTs in one convenient place
-								</p>
-							</div>
-
-							<div className="bg-white p-6 rounded-lg shadow-sm border">
-								<div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-									<ArrowLeftRightIcon className="h-6 w-6 text-green-600" />
-								</div>
-								<h3 className="font-semibold mb-2">Earn Royalties</h3>
-								<p className="text-sm text-muted-foreground">
-									Set royalties to earn from secondary market sales
-								</p>
-							</div>
-						</div>
-					</div>
-				)}
 			</div>
-		</main>
+
+			{/* Wave divider */}
+			<div className="absolute bottom-0 left-0 w-full">
+				<svg
+					viewBox="0 0 1200 120"
+					preserveAspectRatio="none"
+					className="w-full h-16 text-white fill-current"
+				>
+					<title>Wave</title>
+					<path
+						d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+						opacity=".25"
+						className="shape-fill"
+					></path>
+					<path
+						d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
+						opacity=".5"
+						className="shape-fill"
+					></path>
+					<path
+						d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
+						className="shape-fill"
+					></path>
+				</svg>
+			</div>
+		</div>
 	);
 }
